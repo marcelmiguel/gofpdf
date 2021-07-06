@@ -146,6 +146,7 @@ func fpdfNew(orientationStr, unitStr, sizeStr, fontDirStr string, size SizeType)
 	f.stdPageSizes["letter"] = SizeType{612, 792}
 	f.stdPageSizes["legal"] = SizeType{612, 1008}
 	f.stdPageSizes["tabloid"] = SizeType{792, 1224}
+
 	if size.Wd > 0 && size.Ht > 0 {
 		f.defPageSize = size
 	} else {
@@ -3488,9 +3489,26 @@ func (f *Fpdf) getpagesizestr(sizeStr string) (size SizeType) {
 		size.Wd /= f.k
 		size.Ht /= f.k
 
-	} else {
-		f.err = fmt.Errorf("unknown page size %s", sizeStr)
+		return
 	}
+
+	i := strings.Index(sizeStr, "x")
+	if i > -1 {
+		width := sizeStr[:i]
+		height := sizeStr[i+1:]
+
+		if s, err := strconv.ParseFloat(width, 64); err == nil {
+			size.Wd = s
+		}
+
+		if s, err := strconv.ParseFloat(height, 64); err == nil {
+			size.Ht = s
+		}
+
+		return
+	}
+
+	f.err = fmt.Errorf("unknown page size %s", sizeStr)
 	return
 }
 
